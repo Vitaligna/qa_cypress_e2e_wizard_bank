@@ -1,44 +1,55 @@
+import { faker } from '@faker-js/faker';
+
 describe('Wizard Bank - Hermione Granger Account Tests', () => {
+  const depositAmount = faker.number.int({ min: 100, max: 1000 });
+  const withdrawAmount = faker.number.int({ min: 10, max: 99 });
+  const expectedBalance = depositAmount - withdrawAmount;
+
+  const user = 'Hermione Granger';
+  const mainAccount = '1001';
+  const secondaryAccount = '1002';
+
   beforeEach(() => {
     cy.visit(
-      'https://www.globalsqa.com/angularJs-test-project/xmlHttp/index.php'
+      'https://www.globalsqa.com/angularJs-test-project/banking/#/login'
     );
   });
 
   it('should complete the full banking workflow for Hermione Granger', () => {
-    cy.contains('Customer Login').click();
-    cy.get('#userSelect').select('Hermione Granger');
-    cy.get('button[type="submit"]').click();
+    cy.contains('button', 'Customer Login').click();
+    cy.get('#userSelect').select(user);
+    cy.contains('button', 'Login').click();
 
-    cy.get('.borderM > :nth-child(3) > :nth-child(1)').should(
-      'contain',
-      '1001'
-    );
-    cy.get('.borderM > :nth-child(3) > :nth-child(2)').as('balance');
-    cy.get('.borderM > :nth-child(3) > :nth-child(3)').should(
-      'contain',
-      'Dollar'
-    );
+    cy.contains('[ng-hide="noAccount"]', 'Account Number')
+      .contains('strong', mainAccount)
+      .should('be.visible');
 
-    const depositAmount = '500';
-    cy.contains('Deposit').click();
+    cy.contains('[ng-hide="noAccount"]', 'Balance')
+      .contains('strong', '0')
+      .as('balanceDisplay')
+      .should('be.visible');
+
+    cy.contains('.ng-binding', 'Dollar').should('be.visible');
+
+    cy.get('[ng-click="deposit()"]').click();
     cy.get('input[placeholder="amount"]').type(depositAmount);
-    cy.get('form.ng-dirty > .btn').click();
+    cy.get('form').submit();
 
-    cy.get('.error').should('have.text', 'Deposit Successful');
-    cy.get('@balance').should('contain', depositAmount);
+    cy.get('[ng-show="message"]').should('have.text', 'Deposit Successful');
 
-    const withdrawAmount = '200';
-    const expectedFinalBalance = '300';
-    cy.contains('Withdrawl').click();
+    cy.get('@balanceDisplay').should('have.text', depositAmount.toString());
 
+    cy.get('[ng-click="withdrawl()"]').click();
+
+    cy.contains('button', 'Withdraw').should('be.visible');
     cy.get('input[placeholder="amount"]').type(withdrawAmount);
-    cy.get('form.ng-dirty > .btn').click();
+    cy.get('form').submit();
 
-    cy.get('.error').should('have.text', 'Transaction successful');
-    cy.get('@balance').should('contain', expectedFinalBalance);
+    cy.get('[ng-show="message"]').should('have.text', 'Transaction successful');
 
-    cy.contains('Transactions').click();
+    cy.get('@balanceDisplay').should('have.text', expectedBalance.toString());
+
+    cy.get('[ng-click="transactions()"]').click();
 
     cy.get('#anchor0')
       .should('contain', depositAmount)
@@ -47,15 +58,13 @@ describe('Wizard Bank - Hermione Granger Account Tests', () => {
       .should('contain', withdrawAmount)
       .and('contain', 'Debit');
 
-    cy.contains('Back').click();
-    cy.get('#accountSelect').select('1002');
+    cy.contains('button', 'Back').click();
+    cy.get('#accountSelect').select(secondaryAccount);
+    cy.get('[ng-click="transactions()"]').click();
+    cy.get('table tbody tr').should('not.exist');
 
-    cy.contains('Transactions').click();
-    cy.get('tbody tr').should('not.exist');
-
-    cy.contains('Back').click();
-    cy.contains('Logout').click();
-
+    cy.contains('button', 'Back').click();
+    cy.contains('button', 'Logout').click();
     cy.get('#userSelect').should('be.visible');
   });
 });
