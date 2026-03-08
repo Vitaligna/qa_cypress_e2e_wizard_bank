@@ -11,7 +11,7 @@ describe('Wizard Bank - Hermione Granger Account Tests', () => {
 
   beforeEach(() => {
     cy.visit(
-      'https://www.globalsqa.com/angularJs-test-project/banking/#/login'
+      'https://www.globalsqa.com/angularJs-protractor/BankingProject/#/login'
     );
   });
 
@@ -32,21 +32,20 @@ describe('Wizard Bank - Hermione Granger Account Tests', () => {
     cy.contains('.ng-binding', 'Dollar').should('be.visible');
 
     cy.get('[ng-click="deposit()"]').click();
-    cy.get('input[placeholder="amount"]').type(depositAmount);
+
+    cy.get('input[placeholder="amount"]').type(depositAmount.toString());
     cy.get('form').submit();
 
     cy.get('[ng-show="message"]').should('have.text', 'Deposit Successful');
-
     cy.get('@balanceDisplay').should('have.text', depositAmount.toString());
 
     cy.get('[ng-click="withdrawl()"]').click();
 
     cy.contains('button', 'Withdraw').should('be.visible');
-    cy.get('input[placeholder="amount"]').type(withdrawAmount);
+    cy.get('input[placeholder="amount"]').type(withdrawAmount.toString());
     cy.get('form').submit();
 
     cy.get('[ng-show="message"]').should('have.text', 'Transaction successful');
-
     cy.get('@balanceDisplay').should('have.text', expectedBalance.toString());
 
     cy.get('[ng-click="transactions()"]').click();
@@ -61,10 +60,12 @@ describe('Wizard Bank - Hermione Granger Account Tests', () => {
     cy.contains('button', 'Back').click();
     cy.get('#accountSelect').select(secondaryAccount);
     cy.get('[ng-click="transactions()"]').click();
+
     cy.get('table tbody tr').should('not.exist');
 
     cy.contains('button', 'Back').click();
     cy.contains('button', 'Logout').click();
+
     cy.get('#userSelect').should('be.visible');
   });
 });
